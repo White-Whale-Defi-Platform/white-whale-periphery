@@ -1,0 +1,54 @@
+[package]
+name = "osmosis-cw-pool"
+version = "0.1.0"
+authors = ["Kerber0x <kerber0x@protonmail.com>"]
+description = "Osmosis Pool interface implementation to hook Osmosis with White Whale"
+edition = "2021"
+license = "MIT"
+homepage = "https://whitewhale.money"
+documentation = "https://github.com/osmosis-labs/osmosis/tree/main/x/cosmwasmpool#cosmwasm-pool-contract-interface"
+repository = "https://github.com/White-Whale-Defi-Platform/white-whale-periphery"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[features]
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+
+[package.metadata.scripts]
+optimize = """docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/optimizer:0.15.0
+"""
+
+[dependencies]
+cosmwasm-schema = "1.5.0"
+cosmwasm-std = { version = "1.5.0", features = [
+    "iterator",
+    "cosmwasm_1_2"
+] }
+cw-storage-plus = "1.2.0"
+cw2 = "1.1.2"
+schemars = "0.8.16"
+serde = { version = "1.0.194", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.56" }
+white-whale = { git = "https://github.com/White-Whale-Defi-Platform/white-whale-core", branch = "release/v2_contracts" }
+semver = { version = "1.0.12"}
+osmosis-std = "0.21.0"
+
+[dev-dependencies]
+cw-multi-test = "0.20.0"
