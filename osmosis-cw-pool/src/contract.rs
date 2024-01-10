@@ -5,11 +5,11 @@ use cw2::{get_contract_version, set_contract_version};
 use semver::Version;
 use white_whale::migrate_guards::check_contract_name;
 
-use crate::commands;
 use crate::error::ContractError;
 use crate::msg::{Config, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
-use crate::state::{ACTIVE_STATUS, CONFIG};
+use crate::state::CONFIG;
 use crate::ContractError::MigrateInvalidVersion;
+use crate::{commands, queries};
 
 const CONTRACT_NAME: &str = "crates.io:white_whale-osmosis_cw_pool";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -17,39 +17,20 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[entry_point]
 pub fn instantiate(
     deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
+    _env: Env,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
-    let admin = if let Some(admin) = msg.admin {
-        let a = deps.api.addr_validate(&admin)?;
-        Some(a.into_string())
-    } else {
-        None
-    };
-
-    let moderator = if let Some(moderator) = msg.moderator {
-        let a = deps.api.addr_validate(&moderator)?;
-        Some(a.into_string())
-    } else {
-        None
-    };
 
     CONFIG.save(
         deps.storage,
         &Config {
             white_whale_pool: deps.api.addr_validate(&msg.white_whale_pool)?,
-            admin,
-            moderator,
         },
     )?;
 
-    ACTIVE_STATUS.save(deps.storage, &true)?;
-
-    let mut response =
-        Response::default().add_attributes(vec![("action", "instantiate".to_string())]);
+    let response = Response::default().add_attributes(vec![("action", "instantiate".to_string())]);
 
     if let Some(after_pool_created) = msg.after_pool_created {
         Ok(response.set_data(to_json_binary(&after_pool_created)?))
@@ -61,10 +42,15 @@ pub fn instantiate(
 #[entry_point]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    env: Env,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    // only the contract itself can execute messages
+    if info.sender != env.contract.address {
+        return Err(ContractError::Unauthorized {});
+    }
+
     match msg {
         ExecuteMsg::AssertMinimumReceive {
             asset_info,
@@ -72,7 +58,8 @@ pub fn execute(
             minimum_receive,
             receiver,
         } => {
-            let receiver_balance = asset_info.query_balance(
+            // let receiver_balance = asset_info.query_balance(
+            let receiver_balance = asset_info.query_pool(
                 &deps.querier,
                 deps.api,
                 deps.api.addr_validate(receiver.as_str())?,
@@ -94,7 +81,8 @@ pub fn execute(
             maximum_receive,
             receiver,
         } => {
-            let receiver_balance = asset_info.query_balance(
+            // let receiver_balance = asset_info.query_balance(
+            let receiver_balance = asset_info.query_pool(
                 &deps.querier,
                 deps.api,
                 deps.api.addr_validate(receiver.as_str())?,
@@ -115,7 +103,7 @@ pub fn execute(
 
 #[entry_point]
 pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
-    return match msg {
+    match msg {
         SudoMsg::SetActive { is_active } => commands::set_active(deps, is_active),
         SudoMsg::SwapExactAmountIn {
             sender,
@@ -129,32 +117,47 @@ pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractE
             token_in_max_amount,
             ..
         } => commands::swap_exact_amount_out(deps, env, sender, token_out, token_in_max_amount),
-    };
+    }
 }
 
 #[entry_point]
-pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetSwapFee {} => {}
-        QueryMsg::IsActive {} => {}
-        QueryMsg::GetTotalPoolLiquidity {} => {}
+        QueryMsg::GetSwapFee {} => Ok(to_json_binary(&queries::get_swap_fee(deps)?)?),
+        QueryMsg::IsActive {} => unimplemented!(
+            "This query is not implemented. Query the Config on the White Whale pool instead."
+        ),
+        QueryMsg::GetTotalPoolLiquidity {} => {
+            Ok(to_json_binary(&queries::get_total_pool_liquidity(deps)?)?)
+        }
         QueryMsg::SpotPrice {
             quote_asset_denom,
             base_asset_denom,
-        } => {}
+        } => Ok(to_json_binary(&queries::spot_price(
+            deps,
+            quote_asset_denom,
+            base_asset_denom,
+        )?)?),
         QueryMsg::CalcOutAmtGivenIn {
             token_in,
             token_out_denom,
-            swap_fee,
-        } => {}
+            ..
+        } => Ok(to_json_binary(&queries::calc_out_amt_given_in(
+            deps,
+            token_in,
+            token_out_denom,
+        )?)?),
         QueryMsg::CalcInAmtGivenOut {
             token_out,
             token_in_denom,
-            swap_fee,
-        } => {}
+            ..
+        } => Ok(to_json_binary(&queries::calc_in_amt_given_out(
+            deps,
+            token_out,
+            token_in_denom,
+        )?)?),
+        QueryMsg::GetConfig {} => Ok(to_json_binary(&queries::get_config(deps)?)?),
     }
-
-    Ok(Binary::default())
 }
 
 #[entry_point]

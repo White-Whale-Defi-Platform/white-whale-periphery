@@ -5,16 +5,12 @@ use cosmwasm_std::{
 use white_whale::pool_network::asset::{Asset, AssetInfo, PairInfo};
 
 use crate::msg::ExecuteMsg;
-use crate::state::{ACTIVE_STATUS, CONFIG};
+use crate::state::CONFIG;
 use crate::ContractError;
 
 /// Sets the pool to active or inactive.
-pub(crate) fn set_active(deps: DepsMut, is_active: bool) -> Result<Response, ContractError> {
-    ACTIVE_STATUS.save(deps.storage, &is_active)?;
-    Ok(Response::default().add_attributes(vec![
-        ("action", "set_active".to_string()),
-        ("is_active", is_active.to_string()),
-    ]))
+pub(crate) fn set_active(_deps: DepsMut, _is_active: bool) -> Result<Response, ContractError> {
+    unimplemented!("set_active")
 }
 
 /// Swaps an exact amount of tokens in for as many tokens out as possible.
@@ -43,7 +39,8 @@ pub(crate) fn swap_exact_amount_in(
     )?);
 
     // Execute minimum amount assertion
-    let receiver_balance = ask_asset_info.query_balance(&deps.querier, deps.api, sender.clone())?;
+    // let receiver_balance = ask_asset_info.query_balance(&deps.querier, deps.api, sender.clone())?;
+    let receiver_balance = ask_asset_info.query_pool(&deps.querier, deps.api, sender.clone())?;
     messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: env.contract.address.to_string(),
         funds: vec![],
@@ -87,7 +84,8 @@ pub(crate) fn swap_exact_amount_out(
 
     // Execute maximum amount assertion
     let receiver_balance =
-        offer_asset_info.query_balance(&deps.querier, deps.api, sender.clone())?;
+        // offer_asset_info.query_balance(&deps.querier, deps.api, sender.clone())?;
+        offer_asset_info.query_pool(&deps.querier, deps.api, sender.clone())?;
 
     messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: env.contract.address.to_string(),
@@ -140,16 +138,17 @@ fn get_paired_asset_info(token_in: &Coin, pair_info: PairInfo) -> Result<AssetIn
     let asset_info: AssetInfo = pair_info
         .asset_infos
         .into_iter()
-        .filter(|asset_info| {
-            asset_info.clone()
+        .find(|asset_info| {
+            *asset_info
                 != AssetInfo::NativeToken {
                     denom: token_in.clone().denom,
                 }
         })
-        .next()
-        .ok_or(StdError::generic_err(format!(
-            "The asset paired with {} was not found",
-            token_in.denom
-        )))?;
+        .ok_or_else(|| {
+            StdError::generic_err(format!(
+                "The asset paired with {} was not found",
+                token_in.denom
+            ))
+        })?;
     Ok(asset_info)
 }

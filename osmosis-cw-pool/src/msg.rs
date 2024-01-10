@@ -6,8 +6,6 @@ use white_whale::pool_network::asset::AssetInfo;
 #[cw_serde]
 pub struct InstantiateMsg {
     pub white_whale_pool: String,
-    pub admin: Option<String>,
-    pub moderator: Option<String>,
     pub after_pool_created: Option<AfterPoolCreated>,
 }
 
@@ -107,6 +105,10 @@ pub enum QueryMsg {
         token_in_denom: String,
         swap_fee: Decimal,
     },
+
+    /// Returns the config of the contract
+    #[returns(Config)]
+    GetConfig {},
 }
 
 #[cw_serde]
@@ -158,6 +160,4 @@ pub enum CreatePoolGauges {
 #[cw_serde]
 pub struct Config {
     pub white_whale_pool: Addr,
-    pub admin: Option<String>,
-    pub moderator: Option<String>,
 }
