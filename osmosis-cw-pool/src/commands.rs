@@ -52,6 +52,15 @@ pub(crate) fn swap_exact_amount_in(
         })?,
     }));
 
+    // @Boss:
+    // Sorry for lacking documentation, But we need to `set_data` to response with this struct
+    // ```
+    // #[cw_serde]
+    // pub struct SwapExactAmountInResponseData {
+    //   pub token_out_amount: Uint128,
+    // }
+    // ```
+    // so that the calculated amount can be used further in swap routing
     Ok(Response::default()
         .add_messages(messages)
         .add_attributes(vec![("action", "swap_exact_amount_in".to_string())]))
@@ -98,6 +107,15 @@ pub(crate) fn swap_exact_amount_out(
         })?,
     }));
 
+    // @Boss:
+    // Sorry for lacking documentation, But we need to `set_data` to response with this struct
+    // ```
+    // #[cw_serde]
+    // pub struct SwapExactAmountOutResponseData {
+    //     pub token_in_amount: Uint128,
+    // }
+    // ```
+    // so that the calculated amount can be used further in swap routing
     Ok(Response::default().add_attributes(vec![("action", "swap_exact_amount_out".to_string())]))
 }
 

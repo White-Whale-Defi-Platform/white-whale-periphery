@@ -46,6 +46,11 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    // [@Boss]:
+    // Wondering why we use perform min/max assertion here
+    // and check the sender if it's the contract itself
+    // instead of using submsg & reply mechanism?
+
     // only the contract itself can execute messages
     if info.sender != env.contract.address {
         return Err(ContractError::Unauthorized {});
@@ -123,6 +128,9 @@ pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractE
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        // @Boss:
+        // As mentioned in documentation, this query is a liquidity provider's fee from osmosis point of view
+        // How whitewhale calculate fee and collect for itself is not related to this query
         QueryMsg::GetSwapFee {} => Ok(to_json_binary(&queries::get_swap_fee(deps)?)?),
         QueryMsg::IsActive {} => unimplemented!(
             "This query is not implemented. Query the Config on the White Whale pool instead."
