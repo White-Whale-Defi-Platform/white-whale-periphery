@@ -48,7 +48,7 @@ pub(crate) fn get_swap_fee(deps: Deps) -> StdResult<GetSwapFeeResponse> {
     let fees = get_pool_config(deps)?.pool_fees;
 
     Ok(GetSwapFeeResponse {
-        swap_fee: fees.aggregate()?,
+        swap_fee: fees.swap_fee.share,
     })
 }
 

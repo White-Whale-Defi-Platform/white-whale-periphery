@@ -1,18 +1,25 @@
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    entry_point, from_json, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply,
+    Response, StdError, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version};
+use cw_utils::parse_reply_execute_data;
 use semver::Version;
 use white_whale::migrate_guards::check_contract_name;
 
 use crate::error::ContractError;
-use crate::msg::{Config, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
+use crate::msg::{
+    Config, InstantiateMsg, MaximumReceiveAssertion, MigrateMsg, MinimumReceiveAssertion, QueryMsg,
+    SudoMsg,
+};
 use crate::state::CONFIG;
 use crate::ContractError::MigrateInvalidVersion;
 use crate::{commands, queries};
 
 const CONTRACT_NAME: &str = "crates.io:white_whale-osmosis_cw_pool";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub(crate) const ASSERT_MAXIMUM_RECEIVE_REPLY_ID: u64 = 1;
+pub(crate) const ASSERT_MINIMUM_RECEIVE_REPLY_ID: u64 = 2;
 
 #[entry_point]
 pub fn instantiate(
@@ -40,47 +47,21 @@ pub fn instantiate(
 }
 
 #[entry_point]
-pub fn execute(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
-    // only the contract itself can execute messages
-    if info.sender != env.contract.address {
-        return Err(ContractError::Unauthorized {});
-    }
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    match msg.id {
+        ASSERT_MAXIMUM_RECEIVE_REPLY_ID => {
+            let execute_contract_response = parse_reply_execute_data(msg)?;
+            let data = execute_contract_response
+                .data
+                .ok_or(ContractError::CannotReadAssertionData {})?;
+            let MaximumReceiveAssertion {
+                asset_info,
+                prev_balance,
+                maximum_receive,
+                receiver,
+                swap_exact_amount_out_response_data,
+            }: MaximumReceiveAssertion = from_json(data)?;
 
-    match msg {
-        ExecuteMsg::AssertMinimumReceive {
-            asset_info,
-            prev_balance,
-            minimum_receive,
-            receiver,
-        } => {
-            // let receiver_balance = asset_info.query_balance(
-            let receiver_balance = asset_info.query_pool(
-                &deps.querier,
-                deps.api,
-                deps.api.addr_validate(receiver.as_str())?,
-            )?;
-            let swap_amount = receiver_balance.checked_sub(prev_balance)?;
-
-            if swap_amount < minimum_receive {
-                return Err(ContractError::MinimumReceiveAssertion {
-                    minimum_receive,
-                    swap_amount,
-                });
-            }
-
-            Ok(Response::default().add_attribute("action", "assert_minimum_receive"))
-        }
-        ExecuteMsg::AssertMaximumReceive {
-            asset_info,
-            prev_balance,
-            maximum_receive,
-            receiver,
-        } => {
             // let receiver_balance = asset_info.query_balance(
             let receiver_balance = asset_info.query_pool(
                 &deps.querier,
@@ -96,27 +77,77 @@ pub fn execute(
                 });
             }
 
-            Ok(Response::default().add_attribute("action", "assert_maximum_receive"))
+            Ok(Response::default()
+                .add_attribute("action", "assert_maximum_receive")
+                .set_data(to_json_binary(&swap_exact_amount_out_response_data)?))
         }
+        ASSERT_MINIMUM_RECEIVE_REPLY_ID => {
+            let execute_contract_response = parse_reply_execute_data(msg)?;
+            let data = execute_contract_response
+                .data
+                .ok_or(ContractError::CannotReadAssertionData {})?;
+
+            let MinimumReceiveAssertion {
+                asset_info,
+                prev_balance,
+                minimum_receive,
+                receiver,
+                swap_exact_amount_in_response_data,
+            }: MinimumReceiveAssertion = from_json(data)?;
+
+            // let receiver_balance = asset_info.query_balance(
+            let receiver_balance = asset_info.query_pool(
+                &deps.querier,
+                deps.api,
+                deps.api.addr_validate(receiver.as_str())?,
+            )?;
+            let swap_amount = receiver_balance.checked_sub(prev_balance)?;
+
+            if swap_amount < minimum_receive {
+                return Err(ContractError::MinimumReceiveAssertion {
+                    minimum_receive,
+                    swap_amount,
+                });
+            }
+
+            Ok(Response::default()
+                .add_attribute("action", "assert_minimum_receive")
+                .set_data(to_json_binary(&swap_exact_amount_in_response_data)?))
+        }
+        id => Err(StdError::generic_err(format!("Unknown reply ID {}", id)).into()),
     }
 }
 
 #[entry_point]
-pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
         SudoMsg::SetActive { is_active } => commands::set_active(deps, is_active),
         SudoMsg::SwapExactAmountIn {
             sender,
             token_in,
+            token_out_denom,
             token_out_min_amount,
             ..
-        } => commands::swap_exact_amount_in(deps, env, sender, token_in, token_out_min_amount),
+        } => commands::swap_exact_amount_in(
+            deps,
+            sender,
+            token_in,
+            token_out_denom,
+            token_out_min_amount,
+        ),
         SudoMsg::SwapExactAmountOut {
             sender,
             token_out,
+            token_in_denom,
             token_in_max_amount,
             ..
-        } => commands::swap_exact_amount_out(deps, env, sender, token_out, token_in_max_amount),
+        } => commands::swap_exact_amount_out(
+            deps,
+            sender,
+            token_out,
+            token_in_max_amount,
+            token_in_denom,
+        ),
     }
 }
 

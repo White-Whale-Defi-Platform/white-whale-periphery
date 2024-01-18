@@ -556,6 +556,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw-storage-plus",
+ "cw-utils",
  "cw2",
  "osmosis-std",
  "schemars",
@@ -567,9 +568,9 @@ dependencies = [
 
 [[package]]
 name = "osmosis-std"
-version = "0.21.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e87adf61f03306474ce79ab322d52dfff6b0bcf3aed1e12d8864ac0400dec1bf"
+checksum = "8641c376f01f5af329dc2a34e4f5527eaeb0bde18cda8d86fed958d04c86159c"
 dependencies = [
  "chrono",
  "cosmwasm-std",
@@ -990,8 +991,8 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
 name = "white-whale"
-version = "1.1.2"
-source = "git+https://github.com/White-Whale-Defi-Platform/white-whale-core?branch=feat/osmosis-deployment#2efeff481723b8d05f193ddde8439e0509b841a3"
+version = "1.1.1"
+source = "git+https://github.com/White-Whale-Defi-Platform/white-whale-core?branch=main#a5528e5d0c552f652c552e2fde1b7e3343fa7ba2"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",

@@ -1,4 +1,5 @@
 use cosmwasm_std::{OverflowError, StdError, Uint128};
+use cw_utils::ParseReplyError;
 use semver::Version;
 use thiserror::Error;
 
@@ -32,11 +33,25 @@ pub enum ContractError {
     #[error("{0}")]
     OverflowError(#[from] OverflowError),
 
+    #[error("Cannot read assertion data")]
+    CannotReadAssertionData,
+
+    #[error(
+        "The token denom {token_denom} does not match the paired asset denom {paired_asset_denom}"
+    )]
+    PairedAssetMissmatch {
+        token_denom: String,
+        paired_asset_denom: String,
+    },
+
     #[error("Attempt to migrate to version {new_version}, but contract is on a higher version {current_version}")]
     MigrateInvalidVersion {
         new_version: Version,
         current_version: Version,
     },
+
+    #[error("{0}")]
+    ParseReplyError(#[from] ParseReplyError),
 }
 
 impl From<semver::Error> for ContractError {

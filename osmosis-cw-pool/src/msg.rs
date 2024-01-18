@@ -10,26 +10,6 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
-pub enum ExecuteMsg {
-    /// Checks if the swap amount exceeds the minimum_receive. This message  is to be called
-    /// internally by the contract.
-    AssertMinimumReceive {
-        asset_info: AssetInfo,
-        prev_balance: Uint128,
-        minimum_receive: Uint128,
-        receiver: String,
-    },
-    /// Checks if the swap amount falls behind the maximum_receive. This message is to be called
-    /// internally by the contract.
-    AssertMaximumReceive {
-        asset_info: AssetInfo,
-        prev_balance: Uint128,
-        maximum_receive: Uint128,
-        receiver: String,
-    },
-}
-
-#[cw_serde]
 pub enum SudoMsg {
     /// SetActive sets the active status of the pool.
     SetActive { is_active: bool },
@@ -160,4 +140,31 @@ pub enum CreatePoolGauges {
 #[cw_serde]
 pub struct Config {
     pub white_whale_pool: Addr,
+}
+
+#[cw_serde]
+pub struct SwapExactAmountInResponseData {
+    pub token_out_amount: Uint128,
+}
+
+#[cw_serde]
+pub struct SwapExactAmountOutResponseData {
+    pub token_in_amount: Uint128,
+}
+
+#[cw_serde]
+pub struct MinimumReceiveAssertion {
+    pub asset_info: AssetInfo,
+    pub prev_balance: Uint128,
+    pub minimum_receive: Uint128,
+    pub receiver: String,
+    pub swap_exact_amount_in_response_data: SwapExactAmountInResponseData,
+}
+#[cw_serde]
+pub struct MaximumReceiveAssertion {
+    pub asset_info: AssetInfo,
+    pub prev_balance: Uint128,
+    pub maximum_receive: Uint128,
+    pub receiver: String,
+    pub swap_exact_amount_out_response_data: SwapExactAmountOutResponseData,
 }
