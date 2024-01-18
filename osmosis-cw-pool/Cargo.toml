@@ -39,17 +39,17 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 cosmwasm-schema = "1.5.0"
 cosmwasm-std = { version = "1.5.0", features = [
     "iterator",
-    "cosmwasm_1_2"
+    "cosmwasm_1_1"
 ] }
 cw-storage-plus = "1.2.0"
 cw2 = "1.1.2"
 schemars = "0.8.16"
 serde = { version = "1.0.194", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.56" }
-white-whale = { git = "https://github.com/White-Whale-Defi-Platform/white-whale-core", branch = "main", features = ["osmosis"] }
+white-whale = { git = "https://github.com/White-Whale-Defi-Platform/white-whale-core", tag = "v1.6.3", features = ["osmosis"] }
 semver = { version = "1.0.12"}
 osmosis-std = "0.22.0"
 cw-utils = "1.0.3"
 
 [dev-dependencies]
-cw-multi-test = "0.20.0"
+osmosis-test-tube = "21.0.0"

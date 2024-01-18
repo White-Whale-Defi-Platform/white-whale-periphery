@@ -1,11 +1,11 @@
 use cosmwasm_schema::write_api;
 
-use osmosis_cw_pool::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use osmosis_cw_pool::msg::{InstantiateMsg, QueryMsg, SudoMsg};
 
 fn main() {
     write_api! {
         instantiate: InstantiateMsg,
-        execute: ExecuteMsg,
         query: QueryMsg,
+        sudo: SudoMsg,
     }
 }
