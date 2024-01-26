@@ -1,9 +1,11 @@
-use cosmwasm_std::{Coin, StdResult};
-use osmosis_test_tube::{Account, Module, OsmosisTestApp, RunnerResult, SigningAccount, Wasm};
+use cosmwasm_std::{Coin, Decimal, Uint128};
+use osmosis_test_tube::{
+    Account, Module, OsmosisTestApp, RunnerError, RunnerResult, SigningAccount, Wasm,
+};
 use white_whale::pool_network::asset::{Asset, AssetInfo, PairType, ToCoins};
 use white_whale::pool_network::pair::PoolFee;
 
-use osmosis_cw_pool::msg::{InstantiateMsg, QueryMsg};
+use osmosis_cw_pool::msg::{InstantiateMsg, QueryMsg, SudoMsg};
 
 pub struct TestingSuite {
     app: OsmosisTestApp,
@@ -85,7 +87,7 @@ impl TestingSuite {
             .data
             .address;
 
-        self.ww_pool_addr = contract_addr.clone();
+        self.cw_osmosis_pool_interface = contract_addr.clone();
 
         self
     }
@@ -93,7 +95,6 @@ impl TestingSuite {
 
 /// pool related actions
 impl TestingSuite {
-
     #[track_caller]
     pub fn provide_liquidity(&mut self, assets: [Asset; 2]) -> &mut Self {
         let wasm = Wasm::new(&self.app);
@@ -120,9 +121,9 @@ impl TestingSuite {
         query_msg: Q,
         result: impl Fn(RunnerResult<R>),
     ) -> &mut Self
-        where
-            Q: Into<white_whale::pool_network::pair::QueryMsg>,
-            R: serde::de::DeserializeOwned,
+    where
+        Q: Into<white_whale::pool_network::pair::QueryMsg>,
+        R: serde::de::DeserializeOwned,
     {
         let wasm = Wasm::new(&self.app);
         let contract_addr = self.ww_pool_addr.clone();
@@ -141,7 +142,40 @@ impl TestingSuite {
 /// osmosis pool interface related actions
 impl TestingSuite {
     #[track_caller]
-    pub fn swap_token_in(&mut self) -> &mut Self {
+    pub fn swap_token_in(
+        &mut self,
+        sender: String,
+        token_in: Coin,
+        token_out_denom: String,
+        token_out_min_amount: Uint128,
+        swap_fee: Decimal,
+        result: impl Fn(Result<Vec<u8>, RunnerError>),
+    ) -> &mut Self {
+        result(execute_sudo(
+            &self.app,
+            &self.cw_osmosis_pool_interface,
+            SudoMsg::SwapExactAmountIn {
+                sender,
+                token_in,
+                token_out_denom,
+                token_out_min_amount,
+                swap_fee,
+            },
+        ));
+        self
+    }
+
+    #[track_caller]
+    pub fn set_active(
+        &mut self,
+        active: bool,
+        result: impl Fn(Result<Vec<u8>, RunnerError>),
+    ) -> &mut Self {
+        result(execute_sudo(
+            &self.app,
+            &self.cw_osmosis_pool_interface,
+            SudoMsg::SetActive { is_active: active },
+        ));
         self
     }
 
@@ -151,17 +185,14 @@ impl TestingSuite {
         query_msg: Q,
         result: impl Fn(RunnerResult<R>),
     ) -> &mut Self
-        where
-            Q: Into<QueryMsg>,
-            R: serde::de::DeserializeOwned,
+    where
+        Q: Into<QueryMsg>,
+        R: serde::de::DeserializeOwned,
     {
         let wasm = Wasm::new(&self.app);
         let contract_addr = self.cw_osmosis_pool_interface.clone();
 
-        let response = wasm.query::<QueryMsg, R>(
-            &contract_addr,
-            &query_msg.into(),
-        );
+        let response = wasm.query::<QueryMsg, R>(&contract_addr, &query_msg.into());
 
         result(response);
 
@@ -180,4 +211,14 @@ fn store_contract(wasm: &Wasm<OsmosisTestApp>, contract_path: &str, admin: &Sign
         .code_id;
 
     code_id
+}
+
+#[track_caller]
+/// Executes sudo messages
+fn execute_sudo<M: serde::Serialize>(
+    app: &OsmosisTestApp,
+    contract_address: &str,
+    sudo_msg: M,
+) -> Result<Vec<u8>, RunnerError> {
+    app.wasm_sudo(&contract_address, sudo_msg)
 }

@@ -1,5 +1,5 @@
 use cosmwasm_std::{coin, Decimal, Uint128};
-use osmosis_test_tube::RunnerError;
+use osmosis_test_tube::{Account, RunnerError};
 use white_whale::fee::Fee;
 use white_whale::pool_network::asset::{Asset, AssetInfo};
 use white_whale::pool_network::pair::PoolFee;
@@ -11,9 +11,12 @@ mod suite;
 #[test]
 fn swap_tokens_in() {
     let mut suite = TestingSuite::default_with_balances(&[
-        coin(1_000_000_000_000, "uosmo"),
-        coin(1_000_000_000_000, "uwhale"),
+        coin(1_000_000_000_000_000, "uosmo"),
+        coin(1_000_000_000_000_000, "uwhale"),
     ]);
+
+    let account_0 = suite.accounts[0].address();
+    let account_1 = suite.accounts[1].address();
 
     suite.create_ww_pool(
         [
@@ -66,5 +69,16 @@ fn swap_tokens_in() {
             },
         );
 
-    suite.create_osmosis_pool_interface(ww_pool_addr);
+    suite
+        .create_osmosis_pool_interface(ww_pool_addr)
+        .swap_token_in(
+            account_1,
+            coin(1_000_000, "uosmo"),
+            "uwhale".to_string(),
+            Uint128::new(999_000),
+            Decimal::permille(1),
+            |res: Result<Vec<u8>, RunnerError>| {
+                println!("res: {:?}", res);
+            },
+        );
 }
