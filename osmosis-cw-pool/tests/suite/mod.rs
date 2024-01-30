@@ -33,7 +33,7 @@ impl TestingSuite {
     pub fn default_with_balances(initial_balance: &[Coin]) -> Self {
         let app = OsmosisTestApp::new();
         let accounts = app
-            .init_accounts(initial_balance, 3)
+            .init_accounts(initial_balance, 2)
             .unwrap()
             .into_iter()
             .enumerate()
@@ -86,56 +86,6 @@ impl TestingSuite {
         self
     }
 
-    #[track_caller]
-    pub fn create_osmosis_pool_interface(&mut self) -> &mut Self {
-        let cp = CosmwasmPool::new(&self.app);
-        let gov = GovWithAppAccess::new(&self.app);
-
-        let signer = &self.accounts[&0];
-
-        let code_id = 2; // ww_pool is code_id 1 at this point
-        gov.propose_and_execute(
-            UploadCosmWasmPoolCodeAndWhiteListProposal::TYPE_URL.to_string(),
-            UploadCosmWasmPoolCodeAndWhiteListProposal {
-                title: String::from("store test cosmwasm pool code"),
-                description: String::from("test"),
-                wasm_byte_code: get_wasm_byte_code("tests/test_artifacts/osmosis_cw_pool.wasm"),
-            },
-            signer.address(),
-            signer,
-        )
-        .unwrap();
-
-        let instantiate_msg = &InstantiateMsg {
-            white_whale_pool: self.ww_pool_addr.clone(),
-            after_pool_created: None,
-        };
-
-        let res = cp
-            .create_cosmwasm_pool(
-                MsgCreateCosmWasmPool {
-                    code_id,
-                    instantiate_msg: to_json_binary(instantiate_msg).unwrap().to_vec(),
-                    sender: signer.address(),
-                },
-                signer,
-            )
-            .unwrap();
-
-        let pool_id = res.data.pool_id;
-
-        let ContractInfoByPoolIdResponse {
-            contract_address,
-            code_id: _,
-        } = cp
-            .contract_info_by_pool_id(&ContractInfoByPoolIdRequest { pool_id })
-            .unwrap();
-
-        self.cw_osmosis_pool_interface = contract_address;
-        self.osmosis_pool_id = pool_id;
-
-        self
-    }
     #[track_caller]
     pub fn check_address_balance(
         &mut self,
