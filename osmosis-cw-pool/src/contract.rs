@@ -1,25 +1,20 @@
 use cosmwasm_std::{
-    entry_point, from_json, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply,
-    Response, StdError, StdResult,
+    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response,
+    StdError, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version};
-use cw_utils::parse_reply_execute_data;
 use semver::Version;
-use white_whale::migrate_guards::check_contract_name;
+use white_whale_std::migrate_guards::check_contract_name;
 
 use crate::error::ContractError;
-use crate::msg::{
-    Config, InstantiateMsg, MaximumReceiveAssertion, MigrateMsg, MinimumReceiveAssertion, QueryMsg,
-    SudoMsg,
-};
-use crate::state::CONFIG;
+use crate::msg::{Config, InstantiateMsg, MigrateMsg, MinimumReceiveAssertion, QueryMsg, SudoMsg};
+use crate::state::{CONFIG, TEMP_MIN_ASSERTION_DATA};
 use crate::ContractError::MigrateInvalidVersion;
 use crate::{commands, queries};
 
 const CONTRACT_NAME: &str = "crates.io:white_whale-osmosis_cw_pool";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub(crate) const ASSERT_MAXIMUM_RECEIVE_REPLY_ID: u64 = 1;
-pub(crate) const ASSERT_MINIMUM_RECEIVE_REPLY_ID: u64 = 2;
+pub(crate) const ASSERT_MINIMUM_RECEIVE_REPLY_ID: u64 = 1;
 
 #[entry_point]
 pub fn instantiate(
@@ -49,51 +44,15 @@ pub fn instantiate(
 #[entry_point]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id {
-        ASSERT_MAXIMUM_RECEIVE_REPLY_ID => {
-            let execute_contract_response = parse_reply_execute_data(msg)?;
-            let data = execute_contract_response
-                .data
-                .ok_or(ContractError::CannotReadAssertionData {})?;
-            let MaximumReceiveAssertion {
-                asset_info,
-                prev_balance,
-                maximum_receive,
-                receiver,
-                swap_exact_amount_out_response_data,
-            }: MaximumReceiveAssertion = from_json(data)?;
-
-            // let receiver_balance = asset_info.query_balance(
-            let receiver_balance = asset_info.query_pool(
-                &deps.querier,
-                deps.api,
-                deps.api.addr_validate(receiver.as_str())?,
-            )?;
-            let swap_amount = receiver_balance.checked_sub(prev_balance)?;
-
-            if swap_amount > maximum_receive {
-                return Err(ContractError::MaximumReceiveAssertion {
-                    maximum_receive,
-                    swap_amount,
-                });
-            }
-
-            Ok(Response::default()
-                .add_attribute("action", "assert_maximum_receive")
-                .set_data(to_json_binary(&swap_exact_amount_out_response_data)?))
-        }
         ASSERT_MINIMUM_RECEIVE_REPLY_ID => {
-            let execute_contract_response = parse_reply_execute_data(msg)?;
-            let data = execute_contract_response
-                .data
-                .ok_or(ContractError::CannotReadAssertionData {})?;
-
             let MinimumReceiveAssertion {
                 asset_info,
                 prev_balance,
                 minimum_receive,
                 receiver,
-                swap_exact_amount_in_response_data,
-            }: MinimumReceiveAssertion = from_json(data)?;
+            }: MinimumReceiveAssertion = TEMP_MIN_ASSERTION_DATA
+                .may_load(deps.storage)?
+                .ok_or(ContractError::CannotReadAssertionData {})?;
 
             // let receiver_balance = asset_info.query_balance(
             let receiver_balance = asset_info.query_pool(
@@ -110,9 +69,9 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
                 });
             }
 
-            Ok(Response::default()
-                .add_attribute("action", "assert_minimum_receive")
-                .set_data(to_json_binary(&swap_exact_amount_in_response_data)?))
+            TEMP_MIN_ASSERTION_DATA.remove(deps.storage);
+
+            Ok(Response::default().add_attribute("action", "assert_minimum_receive"))
         }
         id => Err(StdError::generic_err(format!("Unknown reply ID {}", id)).into()),
     }

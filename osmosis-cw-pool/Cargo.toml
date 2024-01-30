@@ -46,7 +46,7 @@ cw2 = "1.1.2"
 schemars = "0.8.16"
 serde = { version = "1.0.195", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.56" }
-white-whale = { git = "https://github.com/White-Whale-Defi-Platform/white-whale-core", tag = "v1.6.3", features = ["osmosis"] }
+white-whale-std = { version = "1.1.1", features = ["osmosis"] }
 semver = { version = "1.0.21"}
 osmosis-std = "0.22.0"
 cw-utils = "1.0.3"

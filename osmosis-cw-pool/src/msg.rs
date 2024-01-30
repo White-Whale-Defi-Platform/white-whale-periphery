@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Coin, Decimal, Uint128};
 use osmosis_std::types::osmosis::incentives::MsgCreateGauge;
-use white_whale::pool_network::asset::AssetInfo;
+use white_whale_std::pool_network::asset::AssetInfo;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -158,13 +158,4 @@ pub struct MinimumReceiveAssertion {
     pub prev_balance: Uint128,
     pub minimum_receive: Uint128,
     pub receiver: String,
-    pub swap_exact_amount_in_response_data: SwapExactAmountInResponseData,
-}
-#[cw_serde]
-pub struct MaximumReceiveAssertion {
-    pub asset_info: AssetInfo,
-    pub prev_balance: Uint128,
-    pub maximum_receive: Uint128,
-    pub receiver: String,
-    pub swap_exact_amount_out_response_data: SwapExactAmountOutResponseData,
 }

@@ -1,8 +1,8 @@
 use cosmwasm_std::{
     to_json_binary, Coin, Decimal, Deps, QueryRequest, StdError, StdResult, Uint128, WasmQuery,
 };
-use white_whale::pool_network::asset::{Asset, AssetInfo, ToCoins};
-use white_whale::pool_network::pair::{
+use white_whale_std::pool_network::asset::{Asset, AssetInfo, ToCoins};
+use white_whale_std::pool_network::pair::{
     ConfigResponse, PoolResponse, ReverseSimulationResponse, SimulationResponse,
 };
 
@@ -18,7 +18,7 @@ fn get_pool_config(deps: Deps) -> StdResult<ConfigResponse> {
 
     deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: config.white_whale_pool.to_string(),
-        msg: to_json_binary(&white_whale::pool_network::pair::QueryMsg::Config {})?,
+        msg: to_json_binary(&white_whale_std::pool_network::pair::QueryMsg::Config {})?,
     }))
 }
 
@@ -28,7 +28,7 @@ fn get_pool(deps: Deps) -> StdResult<PoolResponse> {
 
     deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: config.white_whale_pool.to_string(),
-        msg: to_json_binary(&white_whale::pool_network::pair::QueryMsg::Pool {})?,
+        msg: to_json_binary(&white_whale_std::pool_network::pair::QueryMsg::Pool {})?,
     }))
 }
 
@@ -93,7 +93,7 @@ pub(crate) fn calc_out_amt_given_in(
     let swap_simulation: SimulationResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: config.white_whale_pool.to_string(),
-            msg: to_json_binary(&white_whale::pool_network::pair::QueryMsg::Simulation {
+            msg: to_json_binary(&white_whale_std::pool_network::pair::QueryMsg::Simulation {
                 offer_asset: Asset {
                     info: AssetInfo::NativeToken {
                         denom: token_in.denom,
@@ -125,7 +125,7 @@ pub(crate) fn calc_in_amt_given_out(
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: config.white_whale_pool.to_string(),
             msg: to_json_binary(
-                &white_whale::pool_network::pair::QueryMsg::ReverseSimulation {
+                &white_whale_std::pool_network::pair::QueryMsg::ReverseSimulation {
                     ask_asset: Asset {
                         info: AssetInfo::NativeToken {
                             denom: token_out.denom,
@@ -144,6 +144,7 @@ pub(crate) fn calc_in_amt_given_out(
     })
 }
 
+/// Assets the denoms are in the pool
 fn assert_denoms(deps: Deps, token_0: String, token_1: String) -> StdResult<()> {
     let pool = get_pool(deps)?;
 
@@ -158,8 +159,16 @@ fn assert_denoms(deps: Deps, token_0: String, token_1: String) -> StdResult<()> 
 
     if asset_0 && asset_1 {
         Ok(())
+    } else if !asset_0 {
+        Err(StdError::generic_err(format!(
+            "Asset {} not found in the pool",
+            token_0
+        )))
     } else {
-        Err(StdError::generic_err("Asset not found"))
+        Err(StdError::generic_err(format!(
+            "Asset {} not found in the pool",
+            token_1
+        )))
     }
 }
 

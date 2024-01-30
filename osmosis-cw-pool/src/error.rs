@@ -15,7 +15,7 @@ pub enum ContractError {
     Unauthorized {},
 
     #[error(
-        "Assertion failed; minimum receive amount: {minimum_receive}, swap amount: {swap_amount}"
+        "SwapExactAmountIn returned less than expected. Minimum receive amount: {minimum_receive}, received amount after swap: {swap_amount}"
     )]
     MinimumReceiveAssertion {
         minimum_receive: Uint128,
@@ -23,11 +23,11 @@ pub enum ContractError {
     },
 
     #[error(
-        "Assertion failed; maximum receive amount: {maximum_receive}, swap amount: {swap_amount}"
+        "SwapExactAmountOut used more tokens than allowed. Maximum token in amount: {token_in_max_amount}, token in used: {token_in_used}"
     )]
-    MaximumReceiveAssertion {
-        maximum_receive: Uint128,
-        swap_amount: Uint128,
+    MaximumTokenInAssertion {
+        token_in_max_amount: Uint128,
+        token_in_used: Uint128,
     },
 
     #[error("{0}")]
@@ -36,13 +36,8 @@ pub enum ContractError {
     #[error("Cannot read assertion data")]
     CannotReadAssertionData,
 
-    #[error(
-        "The token denom {token_denom} does not match the paired asset denom {paired_asset_denom}"
-    )]
-    PairedAssetMissmatch {
-        token_denom: String,
-        paired_asset_denom: String,
-    },
+    #[error("Impossible to match the paired tokens with the token provided.")]
+    PairedAssetMissmatch,
 
     #[error("Attempt to migrate to version {new_version}, but contract is on a higher version {current_version}")]
     MigrateInvalidVersion {
@@ -52,6 +47,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     ParseReplyError(#[from] ParseReplyError),
+
+    #[error("Can't swap zero amount")]
+    ZeroAmount,
 }
 
 impl From<semver::Error> for ContractError {

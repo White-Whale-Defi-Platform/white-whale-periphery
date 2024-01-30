@@ -1181,7 +1181,7 @@ dependencies = [
  "semver",
  "serde",
  "thiserror",
- "white-whale",
+ "white-whale-std",
 ]
 
 [[package]]
@@ -2420,9 +2420,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "white-whale"
+name = "white-whale-std"
 version = "1.1.1"
-source = "git+https://github.com/White-Whale-Defi-Platform/white-whale-core?tag=v1.6.3#a5528e5d0c552f652c552e2fde1b7e3343fa7ba2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e8a9b86670af680cc07207c24cd2b380e2b185cd489907576ec21f11d0694bd"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
