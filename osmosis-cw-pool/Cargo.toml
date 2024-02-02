@@ -1,6 +1,6 @@
 [package]
 name = "osmosis-cw-pool"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Kerber0x <kerber0x@protonmail.com>"]
 description = "Osmosis Pool interface implementation to hook Osmosis with White Whale pools"
 edition = "2021"
