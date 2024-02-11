@@ -85,10 +85,6 @@ pub enum QueryMsg {
         token_in_denom: String,
         swap_fee: Decimal,
     },
-
-    /// Returns the config of the contract
-    #[returns(Config)]
-    GetConfig {},
 }
 
 #[cw_serde]
