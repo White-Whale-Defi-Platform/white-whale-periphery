@@ -8,7 +8,7 @@ use white_whale_std::pool_network::asset::{Asset, AssetInfo};
 use white_whale_std::pool_network::pair::{PoolFee, PoolResponse};
 
 use osmosis_cw_pool::msg::{
-    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, Config, GetSwapFeeResponse,
+    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, GetSwapFeeResponse,
     IsActiveResponse, QueryMsg, SpotPriceResponse, TotalPoolLiquidityResponse,
 };
 
@@ -499,8 +499,8 @@ fn check_queries() {
         .query_osmosis_pool_interface(
             QueryMsg::IsActive {},
             |result: Result<IsActiveResponse, RunnerError>| {
-                // not implemented as this is done directly on the ww_pool
-                result.unwrap_err();
+                let res = result.unwrap();
+                assert_eq!(res, IsActiveResponse { is_active: true });
             },
         )
         .query_osmosis_pool_interface(
@@ -521,13 +521,6 @@ fn check_queries() {
         .unwrap();
 
     suite
-        .query_osmosis_pool_interface(
-            QueryMsg::IsActive {},
-            |result: Result<IsActiveResponse, RunnerError>| {
-                let res = result.unwrap();
-                assert_eq!(res, IsActiveResponse { is_active: true });
-            },
-        )
         .swap_token_in(
             &new_account,
             coin(10_000, "uosmo"),
