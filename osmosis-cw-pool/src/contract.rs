@@ -146,7 +146,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             token_out,
             token_in_denom,
         )?)?),
-        QueryMsg::GetConfig {} => Ok(to_json_binary(&queries::get_config(deps)?)?),
     }
 }
 

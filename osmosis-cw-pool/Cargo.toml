@@ -1,6 +1,6 @@
 [package]
 name = "osmosis-cw-pool"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Kerber0x <kerber0x@protonmail.com>"]
 description = "Osmosis Pool interface implementation to hook Osmosis with White Whale pools"
 edition = "2021"
@@ -32,7 +32,7 @@ backtraces = ["cosmwasm-std/backtraces"]
 optimize = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/optimizer:0.15.0
+  cosmwasm/optimizer-arm64:0.15.0
 """
 
 [dependencies]

@@ -7,8 +7,8 @@ use white_whale_std::pool_network::pair::{
 };
 
 use crate::msg::{
-    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, Config, GetSwapFeeResponse,
-    SpotPriceResponse, TotalPoolLiquidityResponse,
+    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, GetSwapFeeResponse, SpotPriceResponse,
+    TotalPoolLiquidityResponse,
 };
 use crate::state::CONFIG;
 
@@ -170,9 +170,4 @@ fn assert_denoms(deps: Deps, token_0: String, token_1: String) -> StdResult<()> 
             token_1
         )))
     }
-}
-
-/// Queries the config of the contract
-pub(crate) fn get_config(deps: Deps) -> StdResult<Config> {
-    CONFIG.load(deps.storage)
 }

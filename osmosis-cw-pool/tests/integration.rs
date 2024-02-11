@@ -513,18 +513,6 @@ fn check_queries() {
                     vec![coin(10_000_000, "uosmo"), coin(10_000_000, "uwhale")]
                 );
             },
-        )
-        .query_osmosis_pool_interface(
-            QueryMsg::GetConfig {},
-            |result: Result<Config, RunnerError>| {
-                let config = result.unwrap();
-                assert_eq!(
-                    config,
-                    Config {
-                        white_whale_pool: ww_pool.clone()
-                    }
-                );
-            },
         );
 
     let new_account = suite
