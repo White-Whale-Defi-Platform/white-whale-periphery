@@ -26,6 +26,8 @@ pub(crate) fn swap_exact_amount_in(
     token_out_denom: String,
     minimum_receive: Uint128,
 ) -> Result<Response, ContractError> {
+    ensure_is_active(&deps)?;
+
     let config = CONFIG.load(deps.storage)?;
     let sender = deps.api.addr_validate(sender.as_str())?;
 
@@ -68,6 +70,8 @@ pub(crate) fn swap_exact_amount_out(
     token_in_max_amount: Uint128,
     token_in_denom: String,
 ) -> Result<Response, ContractError> {
+    ensure_is_active(&deps)?;
+
     let config = CONFIG.load(deps.storage)?;
     let sender = deps.api.addr_validate(sender.as_str())?;
 
@@ -179,4 +183,13 @@ fn get_paired_asset_info(
     }
 
     Ok(asset_info)
+}
+
+/// Asserts that the pool is active.
+fn ensure_is_active(deps: &DepsMut) -> Result<(), ContractError> {
+    let is_active = IS_ACTIVE.load(deps.storage)?;
+    if !is_active {
+        return Err(ContractError::InactivePool);
+    }
+    Ok(())
 }

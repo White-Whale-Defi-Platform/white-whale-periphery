@@ -8,7 +8,7 @@ use white_whale_std::pool_network::asset::{Asset, AssetInfo};
 use white_whale_std::pool_network::pair::{PoolFee, PoolResponse};
 
 use osmosis_cw_pool::msg::{
-    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, GetSwapFeeResponse,
+    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, Config, GetSwapFeeResponse,
     IsActiveResponse, QueryMsg, SpotPriceResponse, TotalPoolLiquidityResponse,
 };
 
@@ -606,6 +606,18 @@ fn check_queries() {
             |result: Result<IsActiveResponse, RunnerError>| {
                 let res = result.unwrap();
                 assert_eq!(res, IsActiveResponse { is_active: false });
+            },
+        )
+        .query_osmosis_pool_interface(
+            QueryMsg::GetConfig {},
+            |result: Result<Config, RunnerError>| {
+                let res = result.unwrap();
+                assert_eq!(
+                    res,
+                    Config {
+                        white_whale_pool: ww_pool.clone()
+                    }
+                );
             },
         );
 }
