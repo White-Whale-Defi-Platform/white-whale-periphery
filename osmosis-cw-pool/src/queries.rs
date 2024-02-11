@@ -7,8 +7,8 @@ use white_whale_std::pool_network::pair::{
 };
 
 use crate::msg::{
-    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, GetSwapFeeResponse, IsActiveResponse,
-    SpotPriceResponse, TotalPoolLiquidityResponse,
+    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, Config, GetSwapFeeResponse,
+    IsActiveResponse, SpotPriceResponse, TotalPoolLiquidityResponse,
 };
 use crate::state::{CONFIG, IS_ACTIVE};
 
@@ -66,6 +66,11 @@ pub(crate) fn get_total_pool_liquidity(deps: Deps) -> StdResult<TotalPoolLiquidi
     Ok(TotalPoolLiquidityResponse {
         total_pool_liquidity: pool.assets.to_coins()?,
     })
+}
+
+/// Queries the config of the contract
+pub(crate) fn get_config(deps: Deps) -> StdResult<Config> {
+    CONFIG.load(deps.storage)
 }
 
 /// Queries the spot price

@@ -50,6 +50,9 @@ pub enum ContractError {
 
     #[error("Can't swap zero amount")]
     ZeroAmount,
+
+    #[error("The pool is currently inactive")]
+    InactivePool,
 }
 
 impl From<semver::Error> for ContractError {
