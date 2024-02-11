@@ -8,7 +8,7 @@ use white_whale_std::migrate_guards::check_contract_name;
 
 use crate::error::ContractError;
 use crate::msg::{Config, InstantiateMsg, MigrateMsg, MinimumReceiveAssertion, QueryMsg, SudoMsg};
-use crate::state::{CONFIG, TEMP_MIN_ASSERTION_DATA};
+use crate::state::{CONFIG, IS_ACTIVE, TEMP_MIN_ASSERTION_DATA};
 use crate::ContractError::MigrateInvalidVersion;
 use crate::{commands, queries};
 
@@ -31,6 +31,8 @@ pub fn instantiate(
             white_whale_pool: deps.api.addr_validate(&msg.white_whale_pool)?,
         },
     )?;
+
+    IS_ACTIVE.save(deps.storage, &true)?;
 
     let response = Response::default().add_attributes(vec![("action", "instantiate".to_string())]);
 
@@ -114,9 +116,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetSwapFee {} => Ok(to_json_binary(&queries::get_swap_fee(deps)?)?),
-        QueryMsg::IsActive {} => unimplemented!(
-            "This query is not implemented. Query the Config on the White Whale pool instead."
-        ),
+        QueryMsg::IsActive {} => Ok(to_json_binary(&queries::is_active(deps)?)?),
         QueryMsg::GetTotalPoolLiquidity {} => {
             Ok(to_json_binary(&queries::get_total_pool_liquidity(deps)?)?)
         }
@@ -161,6 +161,10 @@ pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, C
             current_version: storage_version,
             new_version: version,
         });
+    }
+
+    if storage_version == Version::parse("1.0.0")? {
+        IS_ACTIVE.save(deps.storage, &true)?;
     }
 
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;

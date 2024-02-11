@@ -1,2 +1,0 @@
-6f884e470d3e99b5745d8dacfa8e2c09e8ffcacabe062e1f4d412ef24e0b0c4f  osmosis_cw_pool-aarch64.wasm
-52e65cc09de27c6ebe665381596f2a7c9927582354a1139ed79aa40d64fd37e6  osmosis_cw_pool.wasm
