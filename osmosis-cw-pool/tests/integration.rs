@@ -521,6 +521,13 @@ fn check_queries() {
         .unwrap();
 
     suite
+        .query_osmosis_pool_interface(
+            QueryMsg::IsActive {},
+            |result: Result<IsActiveResponse, RunnerError>| {
+                let res = result.unwrap();
+                assert_eq!(res, IsActiveResponse { is_active: true });
+            },
+        )
         .swap_token_in(
             &new_account,
             coin(10_000, "uosmo"),
@@ -599,7 +606,13 @@ fn check_queries() {
             },
         )
         .set_active(false, |result| {
-            // unimplemented
-            result.unwrap_err();
-        });
+            result.unwrap();
+        })
+        .query_osmosis_pool_interface(
+            QueryMsg::IsActive {},
+            |result: Result<IsActiveResponse, RunnerError>| {
+                let res = result.unwrap();
+                assert_eq!(res, IsActiveResponse { is_active: false });
+            },
+        );
 }

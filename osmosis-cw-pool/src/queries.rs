@@ -7,10 +7,10 @@ use white_whale_std::pool_network::pair::{
 };
 
 use crate::msg::{
-    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, GetSwapFeeResponse, SpotPriceResponse,
-    TotalPoolLiquidityResponse,
+    CalcInAmtGivenOutResponse, CalcOutAmtGivenInResponse, GetSwapFeeResponse, IsActiveResponse,
+    SpotPriceResponse, TotalPoolLiquidityResponse,
 };
-use crate::state::CONFIG;
+use crate::state::{CONFIG, IS_ACTIVE};
 
 /// Queries the pool config
 fn get_pool_config(deps: Deps) -> StdResult<ConfigResponse> {
@@ -41,6 +41,13 @@ fn find_asset_amount_by_denom(assets: &[Asset], denom: &str) -> Option<Uint128> 
             AssetInfo::NativeToken { denom: asset_denom } => asset_denom == denom,
         })
         .map(|asset| asset.amount)
+}
+
+/// Queries if the pool is active or not
+pub(crate) fn is_active(deps: Deps) -> StdResult<IsActiveResponse> {
+    let is_active = IS_ACTIVE.load(deps.storage)?;
+
+    Ok(IsActiveResponse { is_active })
 }
 
 /// Queries the swap fee

@@ -9,12 +9,13 @@ use crate::msg::{
     MinimumReceiveAssertion, SwapExactAmountInResponseData, SwapExactAmountOutResponseData,
 };
 use crate::queries::{calc_in_amt_given_out, calc_out_amt_given_in};
-use crate::state::{CONFIG, TEMP_MIN_ASSERTION_DATA};
+use crate::state::{CONFIG, IS_ACTIVE, TEMP_MIN_ASSERTION_DATA};
 use crate::ContractError;
 
 /// Sets the pool to active or inactive.
-pub(crate) fn set_active(_deps: DepsMut, _is_active: bool) -> Result<Response, ContractError> {
-    unimplemented!("set_active")
+pub(crate) fn set_active(deps: DepsMut, is_active: bool) -> Result<Response, ContractError> {
+    IS_ACTIVE.save(deps.storage, &is_active)?;
+    Ok(Response::new().add_attribute("action", "set_active"))
 }
 
 /// Swaps an exact amount of tokens in for as many tokens out as possible.
