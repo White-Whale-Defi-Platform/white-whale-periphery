@@ -88,7 +88,7 @@ pub(crate) fn spot_price(
         .ok_or_else(|| StdError::generic_err("Base asset not found"))?;
 
     Ok(SpotPriceResponse {
-        spot_price: Decimal::from_ratio(base_asset_amount, quote_asset_amount),
+        spot_price: Decimal::from_ratio(quote_asset_amount, base_asset_amount),
     })
 }
 
