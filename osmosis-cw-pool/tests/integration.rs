@@ -573,8 +573,8 @@ fn check_queries() {
                     res,
                     SpotPriceResponse {
                         spot_price: Decimal::from_ratio(
-                            Uint128::from(10_010_000u128),
-                            Uint128::from(9_990_019u128)
+                            Uint128::from(9_990_019u128),
+                            Uint128::from(10_010_000u128)
                         )
                     }
                 );
@@ -591,8 +591,8 @@ fn check_queries() {
                     res,
                     SpotPriceResponse {
                         spot_price: Decimal::from_ratio(
-                            Uint128::from(9_990_019u128),
-                            Uint128::from(10_010_000u128)
+                            Uint128::from(10_010_000u128),
+                            Uint128::from(9_990_019u128)
                         )
                     }
                 );
@@ -615,7 +615,7 @@ fn check_queries() {
                 assert_eq!(
                     res,
                     Config {
-                        white_whale_pool: ww_pool.clone()
+                        white_whale_pool: ww_pool.clone(),
                     }
                 );
             },
