@@ -16,7 +16,7 @@ use syn::{parse_macro_input, ItemEnum};
 /// use thiserror::Error;
 /// use my_macro_crate::migrate_invalid_version_error;
 ///
-/// #[migrate_invalid_version_error]
+/// #[cw_migrate_invalid_version_error]
 /// #[derive(Error, Debug)]
 /// pub enum ContractError {
 ///     #[error("{0}")]
@@ -46,9 +46,9 @@ use syn::{parse_macro_input, ItemEnum};
 /// which are of type `Version`. The error message indicates that the migration attempt failed because
 /// the contract is already at a higher version.
 ///
-/// Note: `#[migrate_invalid_version_error]` must be applied _before_ `#[derive(Error, Debug)]`.
+/// Note: `#[cw_migrate_invalid_version_error]` must be applied _before_ `#[derive(Error, Debug)]`.
 #[proc_macro_attribute]
-pub fn migrate_invalid_version_error(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn cw_migrate_invalid_version_error(_attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the input error enum
     let input = parse_macro_input!(item as ItemEnum);
     let name = &input.ident;

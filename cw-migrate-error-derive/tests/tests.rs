@@ -1,14 +1,14 @@
-extern crate migrate_error_derive;
+extern crate cw_migrate_error_derive;
 extern crate semver;
 
-use migrate_error_derive::migrate_invalid_version_error;
+use cw_migrate_error_derive::cw_migrate_invalid_version_error;
 use semver::Version;
 use thiserror::Error;
 
 #[test]
 fn test_migrate_invalid_version_error_macro() {
     // Define the enum before macro application
-    #[migrate_invalid_version_error]
+    #[cw_migrate_invalid_version_error]
     #[derive(Error, Debug)]
     pub enum TestError {
         #[error("{0}")]
@@ -32,7 +32,7 @@ fn test_migrate_invalid_version_error_macro() {
 
 #[test]
 fn test_macro_preserves_attributes() {
-    #[migrate_invalid_version_error]
+    #[cw_migrate_invalid_version_error]
     #[derive(Error, Debug, PartialEq)]
     pub enum AnotherError {
         #[error("{0}")]
