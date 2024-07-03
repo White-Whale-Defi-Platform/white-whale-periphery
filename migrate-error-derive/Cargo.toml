@@ -1,0 +1,20 @@
+[package]
+name = "migrate-error-derive"
+version = "0.1.0"
+authors = ["Kerber0x <kerber0x@protonmail.com>"]
+edition = "2021"
+description = "A procedural macro crate that automatically adds a migration-related error variant to the existing enum, preserving existing attributes and enhancing error handling in CosmWasm contracts."
+license = "MIT"
+repository = "https://github.com/White-Whale-Defi-Platform/white-whale-periphery"
+homepage = "https://whitewhale.money"
+
+[dependencies]
+syn = { version = "2.0.68", features = ["full"] }
+quote = { version = "1.0.36" }
+proc-macro2 = { version = "1.0.86" }
+thiserror = { version = "1.0.61" }
+semver = { version = "1.0.23" }
+
+[lib]
+doctest = false
+proc-macro = true
